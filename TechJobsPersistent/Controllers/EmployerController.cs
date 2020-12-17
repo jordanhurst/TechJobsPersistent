@@ -58,6 +58,10 @@ namespace TechJobsPersistent.Controllers
 
                     return Redirect("/Employer");
                 }
+                else
+                {
+                    return Redirect("/Employer");
+                }
             }
             return View("Add", theViewModel);
         }

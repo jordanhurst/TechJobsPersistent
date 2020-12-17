@@ -32,31 +32,40 @@ namespace TechJobsPersistent.Controllers
         [HttpGet("/Add")]
         public IActionResult AddJob()
         {
-            AddJobViewModel addJobViewModel = new AddJobViewModel();
+            List<Employer> employers = context.Employers.ToList();
+            List<Skill> skills = context.Skills.ToList();
+            AddJobViewModel addJobViewModel = new AddJobViewModel(employers, skills);
+
             return View(addJobViewModel);
         }
 
-        [HttpPost]
-        public IActionResult ProcessAddJobForm(AddJobViewModel addJobViewModel)
+        public IActionResult ProcessAddJobForm(AddJobViewModel addJobViewModel, string[] selectedSkills)
         {
             if (ModelState.IsValid)
             {
-                List<Job> existingJobs = context.Jobs
-                    .Where(j => j.EmployerId == addJobViewModel.SelectedEmployerId)
-                    .Where(j => j.Name == addJobViewModel.JobName)
-                    .ToList();
-
-                if(existingJobs.Count == 0)
+                Job theJob = new Job
                 {
-                    Job theJob = new Job
+                    Name = addJobViewModel.JobName,
+                    Employer = context.Employers.Find(addJobViewModel.SelectedEmployerId)
+                };
+
+                foreach (var skill in selectedSkills)
+                {
+                    JobSkill newJobSkill = new JobSkill
                     {
-                        Name = addJobViewModel.JobName,
-                        EmployerId = addJobViewModel.SelectedEmployerId,
-                        Employer = context.Employers.Find(addJobViewModel.SelectedEmployerId)
+                        Job = theJob,
+                        Skill = context.Skills.Find(int.Parse(skill))
                     };
+                    context.JobSkills.Add(newJobSkill);
                 }
+
+                context.Jobs.Add(theJob);
+                context.SaveChanges();
+
+                return Redirect("/Home");
+                
             }
-            return View();
+            return View("AddJob", addJobViewModel);
         }
 
         public IActionResult Detail(int id)
